@@ -9,30 +9,52 @@ const QUEST_TYPES = [
   { key: 'yearly', label: 'Yearly', description: 'Long-term goals' },
 ]
 
+const TRACKING_TYPES = [
+  { key: 'unit', label: 'Unit', unit: 'times' },
+  { key: 'steps', label: 'Steps', unit: 'steps' },
+  { key: 'time', label: 'Time', unit: 'minutes' },
+  { key: 'calories', label: 'Calories', unit: 'kcal' },
+  { key: 'milliliters', label: 'Milliliters', unit: 'ml' },
+]
+
 export default function AddQuestModal({ onClose }) {
   const { addQuest } = useStore()
   const [type, setType] = useState('daily')
   const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
+  const [trackingType, setTrackingType] = useState('unit')
+  const [targetAmount, setTargetAmount] = useState('')
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (title.trim()) {
-      addQuest(type, { title: title.trim(), description: description.trim() })
-      setTitle('')
-      setDescription('')
-      onClose()
+    if (!title.trim()) {
+      return
     }
+    
+    // Validate target amount is provided
+    const amount = targetAmount ? parseFloat(targetAmount) : null
+    if (amount === null || amount <= 0) {
+      return
+    }
+
+    addQuest(type, { 
+      title: title.trim(), 
+      trackingType: trackingType,
+      targetAmount: amount,
+    })
+    setTitle('')
+    setTargetAmount('')
+    setTrackingType('unit')
+    onClose()
   }
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
+      <div className="bg-gray-900 rounded-lg shadow-2xl max-w-md w-full p-6 border-2 border-gray-700">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Add New Quest</h2>
+          <h2 className="text-2xl font-bold text-white">Add New Quest</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-all"
+            className="text-gray-400 hover:text-gray-300 transition-all"
           >
             <X className="w-6 h-6" />
           </button>
@@ -41,7 +63,7 @@ export default function AddQuestModal({ onClose }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Quest Type */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-white mb-2">
               Quest Type
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -52,12 +74,12 @@ export default function AddQuestModal({ onClose }) {
                   onClick={() => setType(qt.key)}
                   className={`p-3 rounded-lg border-2 transition-all text-sm ${
                     type === qt.key
-                      ? 'border-purple-500 bg-purple-50 text-purple-700 font-semibold'
-                      : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                      ? 'border-purple-500 bg-purple-500/20 text-white font-semibold'
+                      : 'border-gray-700 hover:border-gray-600 text-gray-300 bg-gray-800'
                   }`}
                 >
                   <div className="font-semibold">{qt.label}</div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs text-gray-400 mt-1">
                     {qt.description}
                   </div>
                 </button>
@@ -67,43 +89,82 @@ export default function AddQuestModal({ onClose }) {
 
           {/* Title */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-white mb-2">
               Quest Title *
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Exercise for 30 minutes"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="e.g., Brush teeth"
+              className="w-full px-4 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-gray-800 text-white placeholder-gray-500"
               required
             />
           </div>
 
-          {/* Description */}
+          {/* Tracking Type */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Description (optional)
+            <label className="block text-sm font-semibold text-white mb-2">
+              Tracking Type
             </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add more details about this quest..."
-              rows="3"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
+            <select
+              value={trackingType}
+              onChange={(e) => setTrackingType(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-gray-800 text-white"
+            >
+              {TRACKING_TYPES.map((tt) => (
+                <option key={tt.key} value={tt.key} className="bg-gray-800">
+                  {tt.label}
+                </option>
+              ))}
+            </select>
           </div>
 
+          {/* Target Amount */}
+          {trackingType !== 'unit' && (
+            <div>
+              <label className="block text-sm font-semibold text-white mb-2">
+                Target Amount ({TRACKING_TYPES.find(t => t.key === trackingType)?.unit}) *
+              </label>
+              <input
+                type="number"
+                value={targetAmount}
+                onChange={(e) => setTargetAmount(e.target.value)}
+                placeholder={`e.g., ${trackingType === 'time' ? '30' : trackingType === 'steps' ? '10000' : trackingType === 'milliliters' ? '2000' : trackingType === 'calories' ? '2000' : '2000'}`}
+                min="0"
+                step={trackingType === 'time' || trackingType === 'page' ? '1' : '0.1'}
+                className="w-full px-4 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-gray-800 text-white placeholder-gray-500"
+                required={trackingType !== 'unit'}
+              />
+            </div>
+          )}
+
+          {/* Unit Amount (for unit type) */}
+          {trackingType === 'unit' && (
+            <div>
+              <label className="block text-sm font-semibold text-white mb-2">
+                How Many Times? *
+              </label>
+              <input
+                type="number"
+                value={targetAmount}
+                onChange={(e) => setTargetAmount(e.target.value)}
+                placeholder="e.g., 2"
+                min="1"
+                step="1"
+                className="w-full px-4 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-gray-800 text-white placeholder-gray-500"
+                required
+              />
+            </div>
+          )}
+
           {/* Rewards Preview */}
-          <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-            <p className="text-sm font-semibold text-purple-700 mb-2">
+          <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+            <p className="text-sm font-semibold text-white mb-2">
               Rewards for completing:
             </p>
             <div className="flex gap-4 text-sm">
-              <span className="text-purple-600">
-                +{type === 'daily' ? 10 : type === 'weekly' ? 50 : type === 'monthly' ? 200 : 1000} XP
-              </span>
-              <span className="text-yellow-600">
+              <span className="text-yellow-300">
                 +{type === 'daily' ? 5 : type === 'weekly' ? 25 : type === 'monthly' ? 100 : 500} 🪙
               </span>
             </div>
@@ -114,13 +175,13 @@ export default function AddQuestModal({ onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-semibold transition-all"
+              className="flex-1 px-4 py-2 border border-gray-700 rounded-lg text-white hover:bg-gray-800 font-bold transition-all bg-gray-900/90"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-all hover:scale-105"
+              className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold transition-all hover:scale-105"
             >
               Add Quest
             </button>

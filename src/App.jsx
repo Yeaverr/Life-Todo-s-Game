@@ -13,7 +13,7 @@ function App() {
   const [showAddPurchase, setShowAddPurchase] = useState(false)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <Header />
       
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -21,30 +21,30 @@ function App() {
         <div className="flex gap-4 mb-6">
           <button
             onClick={() => setActiveTab('quests')}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+            className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'quests'
-                ? 'bg-white text-purple-600 shadow-lg scale-105'
-                : 'bg-white/20 text-white hover:bg-white/30'
+                ? 'bg-white text-gray-900 shadow-lg scale-105 border-2 border-gray-700'
+                : 'bg-gray-900/90 text-white hover:bg-gray-800/90 border-2 border-gray-700'
             }`}
           >
             🎯 Quests
           </button>
           <button
             onClick={() => setActiveTab('stats')}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+            className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'stats'
-                ? 'bg-white text-purple-600 shadow-lg scale-105'
-                : 'bg-white/20 text-white hover:bg-white/30'
+                ? 'bg-white text-gray-900 shadow-lg scale-105 border-2 border-gray-700'
+                : 'bg-gray-900/90 text-white hover:bg-gray-800/90 border-2 border-gray-700'
             }`}
           >
             📊 Stats
           </button>
           <button
             onClick={() => setActiveTab('purchases')}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+            className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'purchases'
-                ? 'bg-white text-purple-600 shadow-lg scale-105'
-                : 'bg-white/20 text-white hover:bg-white/30'
+                ? 'bg-white text-gray-900 shadow-lg scale-105 border-2 border-gray-700'
+                : 'bg-gray-900/90 text-white hover:bg-gray-800/90 border-2 border-gray-700'
             }`}
           >
             🛒 Purchases
@@ -58,7 +58,7 @@ function App() {
               <h2 className="text-3xl font-bold text-white">Your Quests</h2>
               <button
                 onClick={() => setShowAddQuest(true)}
-                className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all hover:scale-105"
+                className="bg-gray-900/90 hover:bg-gray-800/90 text-white px-6 py-3 rounded-lg font-bold shadow-lg transition-all hover:scale-105 border-2 border-gray-700"
               >
                 + Add Quest
               </button>
@@ -72,12 +72,12 @@ function App() {
         {activeTab === 'purchases' && (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-3xl font-bold text-white">Wishlist</h2>
+              <h2 className="text-3xl font-bold text-white">My Purchases</h2>
               <button
                 onClick={() => setShowAddPurchase(true)}
-                className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all hover:scale-105"
+                className="bg-gray-900/90 hover:bg-gray-800/90 text-white px-6 py-3 rounded-lg font-bold shadow-lg transition-all hover:scale-105 border-2 border-gray-700"
               >
-                + Add Item
+                + Record Purchase
               </button>
             </div>
             <PurchasePanel />

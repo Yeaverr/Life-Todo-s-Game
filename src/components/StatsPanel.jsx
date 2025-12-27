@@ -3,7 +3,8 @@ import { Trophy, Coins, Target, TrendingUp, Award } from 'lucide-react'
 
 export default function StatsPanel() {
   const {
-    level,
+    dailyLevel,
+    weeklyLevel,
     totalXP,
     coins,
     totalEarned,
@@ -29,10 +30,17 @@ export default function StatsPanel() {
   const stats = [
     {
       icon: Trophy,
-      label: 'Current Level',
-      value: level,
+      label: 'Daily Level',
+      value: dailyLevel,
       color: 'text-yellow-500',
       bgColor: 'bg-yellow-500/20',
+    },
+    {
+      icon: Trophy,
+      label: 'Weekly Level',
+      value: weeklyLevel,
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/20',
     },
     {
       icon: TrendingUp,
