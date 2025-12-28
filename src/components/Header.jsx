@@ -48,8 +48,8 @@ export default function Header() {
 
             {/* Coins */}
             <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 flex items-center gap-1.5 sm:gap-2 h-[45px] sm:h-[50px] min-w-[100px] sm:min-w-[120px] justify-center border-2 border-gray-700">
-              <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-300" />
-              <span className="text-orange-400 font-bold text-xs sm:text-sm">{coins} 🪙</span>
+              <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400" />
+              <span className="text-white font-bold text-xs sm:text-sm">{coins}</span>
             </div>
 
             {/* Current Time */}

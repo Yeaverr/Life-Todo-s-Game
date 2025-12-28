@@ -192,13 +192,34 @@ export const useStore = create(
 
       resetDailyQuests: () => {
         set((state) => {
-          const today = new Date().toDateString()
-          const lastReset = state.lastDailyResetDate
-            ? new Date(state.lastDailyResetDate).toDateString()
-            : null
+          const now = new Date()
+          // Get date in YYYY-MM-DD format using local time (not UTC)
+          const year = now.getFullYear()
+          const month = String(now.getMonth() + 1).padStart(2, '0')
+          const day = String(now.getDate()).padStart(2, '0')
+          const today = `${year}-${month}-${day}`
+          
+          let lastReset = null
+          if (state.lastDailyResetDate) {
+            try {
+              // Try to parse the stored date (handles ISO strings, timestamps, or date strings)
+              const lastResetDate = new Date(state.lastDailyResetDate)
+              if (!isNaN(lastResetDate.getTime())) {
+                // Use local time for comparison
+                const resetYear = lastResetDate.getFullYear()
+                const resetMonth = String(lastResetDate.getMonth() + 1).padStart(2, '0')
+                const resetDay = String(lastResetDate.getDate()).padStart(2, '0')
+                lastReset = `${resetYear}-${resetMonth}-${resetDay}`
+              }
+            } catch (e) {
+              // If parsing fails, treat as new day (will reset)
+              lastReset = null
+            }
+          }
 
-          // Only reset if it's a new day
+          // Only reset if it's a new day (or if lastReset is null/invalid)
           if (lastReset !== today) {
+            console.log('🔄 Resetting daily quests:', { lastReset, today, now: now.toLocaleString() })
             return {
               quests: {
                 ...state.quests,
@@ -209,7 +230,7 @@ export const useStore = create(
                   completedAt: null,
                 })),
               },
-              lastDailyResetDate: today,
+              lastDailyResetDate: now.toISOString(),
             }
           }
           return state
