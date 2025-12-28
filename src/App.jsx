@@ -1,16 +1,55 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from './store/useStore'
+import { useFirebaseSync } from './hooks/useFirebaseSync'
 import Header from './components/Header'
 import QuestPanel from './components/QuestPanel'
 import StatsPanel from './components/StatsPanel'
 import PurchasePanel from './components/PurchasePanel'
+import QuestManagementPanel from './components/QuestManagementPanel'
 import AddQuestModal from './components/AddQuestModal'
 import AddPurchaseModal from './components/AddPurchaseModal'
 
 function App() {
+  const { resetDailyQuests, resetWeeklyQuests, resetMonthlyQuests } = useStore()
+  
+  // Initialize Firebase sync
+  useFirebaseSync()
   const [activeTab, setActiveTab] = useState('quests')
   const [showAddQuest, setShowAddQuest] = useState(false)
   const [showAddPurchase, setShowAddPurchase] = useState(false)
+
+  // Check for daily, weekly, and monthly resets
+  useEffect(() => {
+    const checkResets = () => {
+      resetDailyQuests()
+      resetWeeklyQuests()
+      resetMonthlyQuests()
+    }
+
+    // Check immediately on mount
+    checkResets()
+
+    // Set up interval to check every minute
+    const interval = setInterval(checkResets, 60000)
+
+    // Also set up a timeout for the next midnight
+    const now = new Date()
+    const tomorrow = new Date(now)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(0, 0, 0, 0)
+    const msUntilMidnight = tomorrow.getTime() - now.getTime()
+
+    const midnightTimeout = setTimeout(() => {
+      checkResets()
+      // After first midnight, check every minute
+      setInterval(checkResets, 60000)
+    }, msUntilMidnight)
+
+    return () => {
+      clearInterval(interval)
+      clearTimeout(midnightTimeout)
+    }
+  }, [resetDailyQuests, resetWeeklyQuests, resetMonthlyQuests])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -23,7 +62,7 @@ function App() {
             onClick={() => setActiveTab('quests')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'quests'
-                ? 'bg-white text-gray-900 shadow-lg scale-105 border-2 border-gray-700'
+                ? 'bg-gray-800 text-white shadow-lg scale-105 border-2 border-gray-600'
                 : 'bg-gray-900/90 text-white hover:bg-gray-800/90 border-2 border-gray-700'
             }`}
           >
@@ -33,7 +72,7 @@ function App() {
             onClick={() => setActiveTab('stats')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'stats'
-                ? 'bg-white text-gray-900 shadow-lg scale-105 border-2 border-gray-700'
+                ? 'bg-gray-800 text-white shadow-lg scale-105 border-2 border-gray-600'
                 : 'bg-gray-900/90 text-white hover:bg-gray-800/90 border-2 border-gray-700'
             }`}
           >
@@ -43,11 +82,21 @@ function App() {
             onClick={() => setActiveTab('purchases')}
             className={`px-6 py-3 rounded-lg font-bold transition-all ${
               activeTab === 'purchases'
-                ? 'bg-white text-gray-900 shadow-lg scale-105 border-2 border-gray-700'
+                ? 'bg-gray-800 text-white shadow-lg scale-105 border-2 border-gray-600'
                 : 'bg-gray-900/90 text-white hover:bg-gray-800/90 border-2 border-gray-700'
             }`}
           >
             🛒 Purchases
+          </button>
+          <button
+            onClick={() => setActiveTab('manage')}
+            className={`px-6 py-3 rounded-lg font-bold transition-all ${
+              activeTab === 'manage'
+                ? 'bg-gray-800 text-white shadow-lg scale-105 border-2 border-gray-600'
+                : 'bg-gray-900/90 text-white hover:bg-gray-800/90 border-2 border-gray-700'
+            }`}
+          >
+            ⚙️ Manage Quests
           </button>
         </div>
 
@@ -68,6 +117,13 @@ function App() {
         )}
 
         {activeTab === 'stats' && <StatsPanel />}
+
+        {activeTab === 'manage' && (
+          <div>
+            <h2 className="text-3xl font-bold text-white mb-6">Manage Your Quests</h2>
+            <QuestManagementPanel />
+          </div>
+        )}
 
         {activeTab === 'purchases' && (
           <div>

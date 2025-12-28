@@ -1,8 +1,27 @@
+import { useState, useEffect } from 'react'
 import { useStore } from '../store/useStore'
-import { Trophy, Coins, Zap } from 'lucide-react'
+import { Trophy, Coins, Clock } from 'lucide-react'
 
 export default function Header() {
-  const { dailyLevel, weeklyLevel, coins, dailyStreak } = useStore()
+  const { dailyLevel, weeklyLevel, coins } = useStore()
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
+
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
+  }
 
   return (
     <header className="bg-white/10 backdrop-blur-md border-b border-white/20 shadow-lg">
@@ -33,13 +52,12 @@ export default function Header() {
               <span className="text-white font-bold text-sm">{coins} 🪙</span>
             </div>
 
-            {/* Streak */}
-            <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg px-3 py-2 flex items-center gap-2 h-[50px] min-w-[120px] justify-center border-2 border-gray-700">
-              <Zap className="w-4 h-4 text-orange-400" />
-              <span className="text-white font-bold text-sm">
-                Streak: {dailyStreak} 🔥
-              </span>
+            {/* Current Time */}
+            <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg px-3 py-2 flex items-center gap-2 h-[50px] min-w-[140px] justify-center border-2 border-gray-700">
+              <Clock className="w-4 h-4 text-blue-300" />
+              <span className="text-white font-bold text-sm">{formatTime(currentTime)}</span>
             </div>
+
           </div>
         </div>
       </div>

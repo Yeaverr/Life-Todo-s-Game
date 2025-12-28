@@ -6,7 +6,6 @@ const QUEST_REWARDS = {
   daily: { xp: 10, coins: 5 },
   weekly: { xp: 50, coins: 25 },
   monthly: { xp: 200, coins: 100 },
-  yearly: { xp: 1000, coins: 500 },
 }
 
 // Get week number of the year
@@ -28,17 +27,19 @@ export const useStore = create(
       totalXP: 0,
       coins: 0,
       totalEarned: 0, // Total coins earned (for tracking)
-      dailyStreak: 0,
-      lastCompletedDate: null,
       lastDailyLevelUpDate: null, // Track when user last leveled up daily
       lastWeeklyLevelUpDate: null, // Track when user last leveled up weekly
+      lastDailyResetDate: null, // Track when daily quests were last reset
+      lastWeeklyResetDate: null, // Track when weekly quests were last reset
+      lastMonthlyResetDate: null, // Track when monthly quests were last reset
+      completedDays: [], // Track dates when all daily quests were completed (format: "YYYY-MM-DD")
+      completedWeeks: [], // Track week numbers when all weekly quests were completed (format: "YYYY-WW")
 
       // Quests
       quests: {
         daily: [],
         weekly: [],
         monthly: [],
-        yearly: [],
       },
 
       // Achievements
@@ -80,26 +81,6 @@ export const useStore = create(
           const newCoins = state.coins + reward.coins
           const newTotalEarned = state.totalEarned + reward.coins
 
-          // Update daily streak
-          const today = new Date().toDateString()
-          const lastDate = state.lastCompletedDate
-            ? new Date(state.lastCompletedDate).toDateString()
-            : null
-          let newStreak = state.dailyStreak
-          if (type === 'daily') {
-            if (lastDate === today) {
-              // Already completed today
-            } else if (
-              lastDate === new Date(Date.now() - 86400000).toDateString()
-            ) {
-              // Consecutive day
-              newStreak += 1
-            } else if (lastDate !== today) {
-              // New streak
-              newStreak = 1
-            }
-          }
-
           // Update quest
           const updatedQuests = state.quests[type].map((q) =>
             q.id === questId
@@ -112,6 +93,7 @@ export const useStore = create(
           )
 
           // Check if all daily quests are completed for daily level up
+          const today = new Date().toDateString()
           let newDailyLevel = state.dailyLevel
           let lastDailyLevelUpDate = state.lastDailyLevelUpDate
           const allDailyCompleted = 
@@ -145,6 +127,7 @@ export const useStore = create(
             })
 
           // Weekly level up if all weekly quests are completed
+          let completedWeeks = [...state.completedWeeks]
           if (type === 'weekly' && allWeeklyCompleted) {
             const thisWeek = getWeekNumber(new Date())
             const lastLevelUpWeek = lastWeeklyLevelUpDate
@@ -153,6 +136,13 @@ export const useStore = create(
             if (lastLevelUpWeek !== thisWeek) {
               newWeeklyLevel = state.weeklyLevel + 1
               lastWeeklyLevelUpDate = new Date().toISOString()
+              
+              // Track completed week (format: YYYY-WW)
+              const now = new Date()
+              const weekStr = `${now.getFullYear()}-${String(thisWeek).padStart(2, '0')}`
+              if (!completedWeeks.includes(weekStr)) {
+                completedWeeks.push(weekStr)
+              }
             }
           }
 
@@ -167,10 +157,10 @@ export const useStore = create(
             totalEarned: newTotalEarned,
             dailyLevel: newDailyLevel,
             weeklyLevel: newWeeklyLevel,
-            dailyStreak: newStreak,
-            lastCompletedDate: today,
             lastDailyLevelUpDate: lastDailyLevelUpDate,
             lastWeeklyLevelUpDate: lastWeeklyLevelUpDate,
+            completedDays: completedDays,
+            completedWeeks: completedWeeks,
           }
         })
       },
@@ -182,6 +172,109 @@ export const useStore = create(
             [type]: state.quests[type].filter((q) => q.id !== questId),
           },
         }))
+      },
+
+      updateQuest: (type, questId, updates) => {
+        set((state) => ({
+          quests: {
+            ...state.quests,
+            [type]: state.quests[type].map((q) =>
+              q.id === questId
+                ? {
+                    ...q,
+                    ...updates,
+                  }
+                : q
+            ),
+          },
+        }))
+      },
+
+      resetDailyQuests: () => {
+        set((state) => {
+          const today = new Date().toDateString()
+          const lastReset = state.lastDailyResetDate
+            ? new Date(state.lastDailyResetDate).toDateString()
+            : null
+
+          // Only reset if it's a new day
+          if (lastReset !== today) {
+            return {
+              quests: {
+                ...state.quests,
+                daily: state.quests.daily.map((q) => ({
+                  ...q,
+                  completed: false,
+                  currentAmount: 0,
+                  completedAt: null,
+                })),
+              },
+              lastDailyResetDate: today,
+            }
+          }
+          return state
+        })
+      },
+
+
+      resetWeeklyQuests: () => {
+        set((state) => {
+          const thisWeek = getWeekNumber(new Date())
+          const thisYear = new Date().getFullYear()
+          const lastResetWeek = state.lastWeeklyResetDate
+            ? getWeekNumber(new Date(state.lastWeeklyResetDate))
+            : null
+          const lastResetYear = state.lastWeeklyResetDate
+            ? new Date(state.lastWeeklyResetDate).getFullYear()
+            : null
+
+          // Only reset if it's a new week (or new year)
+          if (lastResetWeek !== thisWeek || lastResetYear !== thisYear) {
+            return {
+              quests: {
+                ...state.quests,
+                weekly: state.quests.weekly.map((q) => ({
+                  ...q,
+                  completed: false,
+                  currentAmount: 0,
+                  completedAt: null,
+                })),
+              },
+              lastWeeklyResetDate: new Date().toISOString(),
+            }
+          }
+          return state
+        })
+      },
+
+      resetMonthlyQuests: () => {
+        set((state) => {
+          const now = new Date()
+          const thisMonth = now.getMonth()
+          const thisYear = now.getFullYear()
+          const lastReset = state.lastMonthlyResetDate
+            ? new Date(state.lastMonthlyResetDate)
+            : null
+          const lastResetMonth = lastReset ? lastReset.getMonth() : null
+          const lastResetYear = lastReset ? lastReset.getFullYear() : null
+
+          // Only reset if it's a new month (or new year)
+          if (lastResetMonth !== thisMonth || lastResetYear !== thisYear) {
+            return {
+              quests: {
+                ...state.quests,
+                monthly: state.quests.monthly.map((q) => ({
+                  ...q,
+                  completed: false,
+                  currentAmount: 0,
+                  completedAt: null,
+                })),
+              },
+              lastMonthlyResetDate: new Date().toISOString(),
+            }
+          }
+          return state
+        })
       },
 
       updateQuestProgress: (type, questId, amount) => {
@@ -200,26 +293,6 @@ export const useStore = create(
             const newCoins = state.coins + reward.coins
             const newTotalEarned = state.totalEarned + reward.coins
 
-            // Update daily streak
-            const today = new Date().toDateString()
-            const lastDate = state.lastCompletedDate
-              ? new Date(state.lastCompletedDate).toDateString()
-              : null
-            let newStreak = state.dailyStreak
-            if (type === 'daily') {
-              if (lastDate === today) {
-                // Already completed today
-              } else if (
-                lastDate === new Date(Date.now() - 86400000).toDateString()
-              ) {
-                // Consecutive day
-                newStreak += 1
-              } else if (lastDate !== today) {
-                // New streak
-                newStreak = 1
-              }
-            }
-
             // Update quests
             const updatedQuests = state.quests[type].map((q) =>
               q.id === questId
@@ -233,6 +306,7 @@ export const useStore = create(
             )
 
             // Check if all daily quests are completed for daily level up
+            const today = new Date().toDateString()
             let newDailyLevel = state.dailyLevel
             let lastDailyLevelUpDate = state.lastDailyLevelUpDate
             const allDailyCompleted = 
@@ -241,6 +315,7 @@ export const useStore = create(
               updatedQuests.every((q) => q.completed === true)
 
             // Daily level up if all daily quests are completed and haven't leveled up today
+            let completedDays = [...state.completedDays]
             if (allDailyCompleted) {
               const lastLevelUp = lastDailyLevelUpDate
                 ? new Date(lastDailyLevelUpDate).toDateString()
@@ -248,6 +323,12 @@ export const useStore = create(
               if (lastLevelUp !== today) {
                 newDailyLevel = state.dailyLevel + 1
                 lastDailyLevelUpDate = today
+                
+                // Track completed day (format: YYYY-MM-DD)
+                const todayStr = new Date().toISOString().split('T')[0]
+                if (!completedDays.includes(todayStr)) {
+                  completedDays.push(todayStr)
+                }
               }
             }
 
@@ -260,6 +341,7 @@ export const useStore = create(
               updatedQuests.every((q) => q.completed === true)
 
             // Weekly level up if all weekly quests are completed
+            let completedWeeks = [...state.completedWeeks]
             if (allWeeklyCompleted) {
               const thisWeek = getWeekNumber(new Date())
               const lastLevelUpWeek = lastWeeklyLevelUpDate
@@ -268,6 +350,13 @@ export const useStore = create(
               if (lastLevelUpWeek !== thisWeek) {
                 newWeeklyLevel = state.weeklyLevel + 1
                 lastWeeklyLevelUpDate = new Date().toISOString()
+                
+                // Track completed week (format: YYYY-WW)
+                const now = new Date()
+                const weekStr = `${now.getFullYear()}-${String(thisWeek).padStart(2, '0')}`
+                if (!completedWeeks.includes(weekStr)) {
+                  completedWeeks.push(weekStr)
+                }
               }
             }
 
@@ -280,12 +369,12 @@ export const useStore = create(
               totalXP: newTotalXP,
               coins: newCoins,
               totalEarned: newTotalEarned,
-              dailyLevel: newDailyLevel,
-              weeklyLevel: newWeeklyLevel,
-              dailyStreak: newStreak,
-              lastCompletedDate: today,
-              lastDailyLevelUpDate: lastDailyLevelUpDate,
-              lastWeeklyLevelUpDate: lastWeeklyLevelUpDate,
+            dailyLevel: newDailyLevel,
+            weeklyLevel: newWeeklyLevel,
+            lastDailyLevelUpDate: lastDailyLevelUpDate,
+            lastWeeklyLevelUpDate: lastWeeklyLevelUpDate,
+            completedDays: completedDays,
+            completedWeeks: completedWeeks,
             }
           }
 
@@ -319,6 +408,7 @@ export const useStore = create(
             id: Date.now().toString(),
             name: purchase.name,
             cost: costNum,
+            realCost: purchase.realCost || null,
             description: purchase.description || '',
             purchased: true, // Mark as purchased immediately
             purchasedAt: new Date().toISOString(),

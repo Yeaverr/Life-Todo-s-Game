@@ -7,7 +7,6 @@ const QUEST_TYPES = [
   { key: 'daily', label: 'Daily', color: 'bg-blue-500' },
   { key: 'weekly', label: 'Weekly', color: 'bg-green-500' },
   { key: 'monthly', label: 'Monthly', color: 'bg-purple-500' },
-  { key: 'yearly', label: 'Yearly', color: 'bg-orange-500' },
 ]
 
 export default function QuestPanel() {
@@ -100,9 +99,6 @@ export default function QuestPanel() {
           month: 'long'
         })
       
-      case 'yearly':
-        return now.getFullYear().toString()
-      
       default: {
         const day = now.getDate()
         const month = now.toLocaleDateString('en-US', { month: 'long' })
@@ -129,7 +125,7 @@ export default function QuestPanel() {
             onClick={() => setSelectedType(type.key)}
             className={`px-4 py-2 rounded-lg font-bold transition-all ${
               selectedType === type.key
-                ? 'bg-white text-gray-900 shadow-lg scale-105 border-2 border-gray-700'
+                ? 'bg-gray-800 text-white shadow-lg scale-105 border-2 border-gray-600'
                 : 'bg-gray-900/90 text-white hover:bg-gray-800/90 border-2 border-gray-700'
             }`}
           >
@@ -169,7 +165,13 @@ export default function QuestPanel() {
               {allDailyCompleted && lastDailyLevelUpDate && (
                 <div className="flex items-center gap-1 text-xs text-yellow-300">
                   <Calendar className="w-4 h-4" />
-                  {new Date(lastDailyLevelUpDate).toLocaleDateString()}
+                  {new Date(lastDailyLevelUpDate).toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                  })}
                 </div>
               )}
             </div>
@@ -230,7 +232,13 @@ export default function QuestPanel() {
                           {quest.completedAt && (
                             <div className="flex items-center gap-1 text-xs text-yellow-300">
                               <Calendar className="w-4 h-4" />
-                              {new Date(quest.completedAt).toLocaleDateString()}
+                              {new Date(quest.completedAt).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: false
+                              })}
                             </div>
                           )}
                         </div>

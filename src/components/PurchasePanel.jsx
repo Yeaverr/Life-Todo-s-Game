@@ -1,69 +1,64 @@
 import { useStore } from '../store/useStore'
-import { ShoppingBag, CheckCircle2, Trash2, Coins } from 'lucide-react'
+import { ShoppingBag, Coins, Calendar } from 'lucide-react'
 
 export default function PurchasePanel() {
-  const { purchases, deletePurchase } = useStore()
+  const { purchases } = useStore()
 
   return (
     <div className="space-y-6">
       {purchases.length === 0 ? (
-        <div className="text-center py-12 bg-white/10 rounded-lg backdrop-blur-sm">
+        <div className="text-center py-12 bg-gray-900/90 rounded-lg backdrop-blur-sm border-2 border-gray-700">
           <ShoppingBag className="w-16 h-16 text-white/50 mx-auto mb-4" />
           <p className="text-white text-lg">
             No purchases recorded yet. Record your real-life purchases here! 🛒
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-3">
           {purchases.map((purchase) => {
             return (
               <div
                 key={purchase.id}
-                className="bg-white rounded-lg p-6 shadow-lg transition-all hover:scale-105 border-2 border-green-500"
+                className="bg-gray-900/90 rounded-lg p-4 border-2 border-gray-700 shadow-lg transition-all hover:border-gray-600"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="font-bold text-xl text-gray-800">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-lg text-white mb-2">
                       {purchase.name}
                     </h3>
-                    {purchase.description && (
-                      <p className="text-gray-600 text-sm mt-2">
-                        {purchase.description}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-4 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <Coins className="w-4 h-4 text-yellow-300" />
+                        <span className="text-yellow-300 font-semibold">
+                          {purchase.cost.toLocaleString()} 🪙
+                        </span>
+                        <span className="text-gray-400 text-sm">(spent)</span>
+                      </div>
+                      {purchase.realCost && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-blue-300 font-semibold">
+                            ${purchase.realCost.toFixed(2)}
+                          </span>
+                          <span className="text-gray-400 text-sm">(real cost)</span>
+                        </div>
+                      )}
+                      {purchase.purchasedAt && (
+                        <div className="flex items-center gap-1 text-gray-400 text-sm">
+                          <Calendar className="w-4 h-4" />
+                          <span>
+                            {new Date(purchase.purchasedAt).toLocaleString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: false
+                            })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  {purchase.purchased && (
-                    <CheckCircle2 className="w-6 h-6 text-green-500 flex-shrink-0 ml-2" />
-                  )}
                 </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <div className="flex items-center gap-2">
-                    <Coins className="w-5 h-5 text-yellow-600" />
-                    <span className="text-xl font-bold text-green-600">
-                      {purchase.cost.toLocaleString()} 🪙
-                    </span>
-                    <span className="text-sm text-gray-500">(spent)</span>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => deletePurchase(purchase.id)}
-                      className="text-red-400 hover:text-red-600 transition-all hover:scale-110 p-2"
-                      title="Delete purchase"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-
-                {purchase.purchased && purchase.purchasedAt && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <p className="text-green-600 text-sm font-semibold">
-                      ✓ Purchased on {new Date(purchase.purchasedAt).toLocaleDateString()} 🎉
-                    </p>
-                  </div>
-                )}
               </div>
             )
           })}

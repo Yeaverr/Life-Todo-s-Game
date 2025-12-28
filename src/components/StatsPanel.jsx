@@ -1,5 +1,15 @@
+import { useState } from 'react'
 import { useStore } from '../store/useStore'
-import { Trophy, Coins, Target, TrendingUp, Award } from 'lucide-react'
+import { Trophy, Coins, Target, TrendingUp, Calendar as CalendarIcon } from 'lucide-react'
+
+// Get week number of the year
+const getWeekNumber = (date) => {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  const dayNum = d.getUTCDay() || 7
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum)
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
+}
 
 export default function StatsPanel() {
   const {
@@ -8,9 +18,13 @@ export default function StatsPanel() {
     totalXP,
     coins,
     totalEarned,
-    dailyStreak,
     quests,
+    completedDays,
+    completedWeeks,
   } = useStore()
+
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
 
   // Calculate statistics
   const totalQuests = Object.values(quests).flat().length
@@ -24,91 +38,103 @@ export default function StatsPanel() {
     daily: quests.daily.filter((q) => q.completed).length,
     weekly: quests.weekly.filter((q) => q.completed).length,
     monthly: quests.monthly.filter((q) => q.completed).length,
-    yearly: quests.yearly.filter((q) => q.completed).length,
   }
 
-  const stats = [
-    {
-      icon: Trophy,
-      label: 'Daily Level',
-      value: dailyLevel,
-      color: 'text-yellow-500',
-      bgColor: 'bg-yellow-500/20',
-    },
-    {
-      icon: Trophy,
-      label: 'Weekly Level',
-      value: weeklyLevel,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/20',
-    },
-    {
-      icon: TrendingUp,
-      label: 'Total XP',
-      value: totalXP.toLocaleString(),
-      color: 'text-purple-500',
-      bgColor: 'bg-purple-500/20',
-    },
-    {
-      icon: Coins,
-      label: 'Total Earned',
-      value: `${totalEarned.toLocaleString()} 🪙`,
-      color: 'text-green-500',
-      bgColor: 'bg-green-500/20',
-    },
-    {
-      icon: Target,
-      label: 'Completion Rate',
-      value: `${completionRate}%`,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/20',
-    },
-    {
-      icon: Award,
-      label: 'Daily Streak',
-      value: `${dailyStreak} days 🔥`,
-      color: 'text-orange-500',
-      bgColor: 'bg-orange-500/20',
-    },
-    {
-      icon: Target,
-      label: 'Completed Quests',
-      value: `${completedQuests}/${totalQuests}`,
-      color: 'text-indigo-500',
-      bgColor: 'bg-indigo-500/20',
-    },
+  // Calculate monthly completion stats
+  const now = new Date()
+  const currentMonth = now.getMonth()
+  const currentYear = now.getFullYear()
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+  
+  const completedDaysThisMonth = completedDays.filter((day) => {
+    const date = new Date(day)
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear
+  }).length
+
+  // Calculate weekly completion stats for current month
+  // Get all weeks that fall within the current month
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1)
+  const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0)
+  const firstWeek = getWeekNumber(firstDayOfMonth)
+  const lastWeek = getWeekNumber(lastDayOfMonth)
+  
+  // Count unique weeks in the month
+  const weeksInMonthSet = new Set()
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(currentYear, currentMonth, day)
+    const weekNum = getWeekNumber(date)
+    weeksInMonthSet.add(weekNum)
+  }
+  const weeksInMonth = weeksInMonthSet.size
+  
+  // Count completed weeks that fall in this month
+  const completedWeeksThisMonth = completedWeeks.filter((week) => {
+    const [year, weekNum] = week.split('-')
+    const weekNumber = parseInt(weekNum)
+    return year === String(currentYear) && weeksInMonthSet.has(weekNumber)
+  }).length
+
+  // Calendar generation
+  const generateCalendar = () => {
+    const firstDay = new Date(selectedYear, selectedMonth, 1)
+    const lastDay = new Date(selectedYear, selectedMonth + 1, 0)
+    const daysInMonth = lastDay.getDate()
+    const startingDayOfWeek = firstDay.getDay()
+
+    const calendar = []
+    const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      calendar.push({ day: null, date: null })
+    }
+
+    // Add all days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+      const isCompleted = completedDays.includes(dateStr)
+      calendar.push({ day, date: dateStr, isCompleted })
+    }
+
+    return { calendar, weekDays }
+  }
+
+  const { calendar, weekDays } = generateCalendar()
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
   ]
+
+  const handlePrevMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11)
+      setSelectedYear(selectedYear - 1)
+    } else {
+      setSelectedMonth(selectedMonth - 1)
+    }
+  }
+
+  const handleNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0)
+      setSelectedYear(selectedYear + 1)
+    } else {
+      setSelectedMonth(selectedMonth + 1)
+    }
+  }
 
   return (
     <div className="space-y-6">
       <h2 className="text-3xl font-bold text-white mb-6">Your Statistics</h2>
 
-      {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {stats.map((stat, index) => (
-          <div
-            key={index}
-            className={`${stat.bgColor} backdrop-blur-sm rounded-lg p-6 border border-white/20 shadow-lg`}
-          >
-            <div className="flex items-center gap-4">
-              <stat.icon className={`w-8 h-8 ${stat.color}`} />
-              <div>
-                <p className="text-white/70 text-sm">{stat.label}</p>
-                <p className={`text-2xl font-bold ${stat.color} text-white`}>
-                  {stat.value}
-                </p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* Quest Completion by Type */}
-      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 shadow-lg">
+      <div>
         <h3 className="text-xl font-bold text-white mb-4">
           Quests Completed by Type
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg p-6 border-2 border-gray-700 shadow-lg">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div className="text-center">
             <div className="text-3xl font-bold text-blue-400">
               {questsByType.daily}
@@ -127,31 +153,108 @@ export default function StatsPanel() {
             </div>
             <div className="text-white/70 text-sm">Monthly</div>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-orange-400">
-              {questsByType.yearly}
+        </div>
+        </div>
+      </div>
+
+      {/* Dashboard Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Monthly Completion Card */}
+        <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg p-6 border-2 border-gray-700 shadow-lg">
+          <div className="flex items-center gap-4">
+            <CalendarIcon className="w-10 h-10 text-blue-400" />
+            <div>
+              <p className="text-white/70 text-sm font-semibold">Monthly Completion</p>
+              <p className="text-3xl font-bold text-white">
+                {completedDaysThisMonth}/{daysInMonth}
+              </p>
+              <p className="text-white/60 text-xs mt-1">
+                Days completed in {monthNames[currentMonth]}
+              </p>
             </div>
-            <div className="text-white/70 text-sm">Yearly</div>
+          </div>
+        </div>
+
+        {/* Expected Monthly Completion Card */}
+        <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg p-6 border-2 border-gray-700 shadow-lg">
+          <div className="flex items-center gap-4">
+            <Target className="w-10 h-10 text-purple-400" />
+            <div>
+              <p className="text-white/70 text-sm font-semibold">Expected Completion</p>
+              <p className="text-3xl font-bold text-white">
+                {now.getDate()}/{daysInMonth}
+              </p>
+              <p className="text-white/60 text-xs mt-1">
+                Current day in {monthNames[currentMonth]}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Current Balance */}
-      <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg p-6 border border-white/20 shadow-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-white/90 text-sm">Current Balance</p>
-            <p className="text-4xl font-bold text-white">
-              {coins.toLocaleString()} 🪙
-            </p>
-            <p className="text-white/70 text-sm mt-2">
-              Ready to spend on your wishlist!
-            </p>
+      {/* Calendar */}
+      <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg p-6 border-2 border-gray-700 shadow-lg">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-white">Completion Calendar</h3>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handlePrevMonth}
+              className="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-bold transition-all border border-gray-700"
+            >
+              ←
+            </button>
+            <span className="text-white font-bold text-lg min-w-[200px] text-center">
+              {monthNames[selectedMonth]} {selectedYear}
+            </span>
+            <button
+              onClick={handleNextMonth}
+              className="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-bold transition-all border border-gray-700"
+            >
+              →
+            </button>
           </div>
-          <Coins className="w-16 h-16 text-white/30" />
+        </div>
+
+        <div className="grid grid-cols-7 gap-2">
+          {/* Week day headers */}
+          {weekDays.map((day) => (
+            <div
+              key={day}
+              className="text-center text-sm font-bold text-gray-400 py-2"
+            >
+              {day}
+            </div>
+          ))}
+
+          {/* Calendar days */}
+          {calendar.map((item, index) => (
+            <div
+              key={index}
+              className={`aspect-square flex items-center justify-center rounded-lg border-2 transition-all ${
+                item.day === null
+                  ? 'border-transparent'
+                  : item.isCompleted
+                  ? 'bg-green-500/30 border-green-500 text-white font-bold'
+                  : 'bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-700/50'
+              }`}
+            >
+              {item.day !== null && (
+                <span className={item.isCompleted ? 'text-green-300' : 'text-gray-400'}>
+                  {item.day}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 flex items-center gap-4 justify-center">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-green-500/30 border-2 border-green-500 rounded"></div>
+            <span className="text-sm text-gray-400">All quests completed</span>
+          </div>
         </div>
       </div>
+
+
     </div>
   )
 }
-

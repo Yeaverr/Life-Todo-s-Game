@@ -8,7 +8,6 @@ A gamified todo app that turns your real-life tasks into quests! Complete quests
 - **Gamification**: 
   - XP and leveling system
   - Virtual currency (coins) for completing tasks
-  - Daily streak tracking
   - Progress visualization
 - **Rewards**: Earn coins by completing quests, then spend them on real-life purchases
 - **Statistics**: Track your progress, completion rates, and achievements
@@ -39,7 +38,7 @@ npm run dev
 
 1. **Add Quests**: Click "Add Quest" and choose a type (Daily, Weekly, Monthly, or Yearly)
 2. **Complete Quests**: Click the circle next to a quest to mark it as complete and earn rewards
-3. **Track Progress**: View your level, XP, coins, and streaks in the header
+3. **Track Progress**: View your level, XP, and coins in the header
 4. **Add Purchases**: Add items you want to buy to your wishlist with a coin cost
 5. **Buy Items**: Once you have enough coins, purchase items from your wishlist!
 
@@ -66,7 +65,6 @@ The built files will be in the `dist` directory.
 - **Monthly Quests**: 200 XP, 100 coins
 - **Yearly Quests**: 1000 XP, 500 coins
 - **Leveling**: XP requirements increase exponentially (100 × 1.5^level)
-- **Streaks**: Maintain daily completion streaks for motivation
 
 ## 🎨 Future Enhancements
 
