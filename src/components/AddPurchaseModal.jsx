@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from '../store/useStore'
 import { X, AlertCircle } from 'lucide-react'
 
@@ -8,6 +8,19 @@ export default function AddPurchaseModal({ onClose }) {
   const [coinCost, setCoinCost] = useState('')
   const [realCost, setRealCost] = useState('')
   const [error, setError] = useState('')
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    // Save the current overflow style
+    const originalStyle = window.getComputedStyle(document.body).overflow
+    // Disable scrolling on the body
+    document.body.style.overflow = 'hidden'
+    
+    // Re-enable scrolling when component unmounts
+    return () => {
+      document.body.style.overflow = originalStyle
+    }
+  }, [])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -52,8 +65,17 @@ export default function AddPurchaseModal({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg shadow-2xl max-w-md w-full p-6 border-2 border-gray-700">
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onTouchMove={(e) => {
+        // Prevent scrolling the background when touching the backdrop
+        if (e.target === e.currentTarget) {
+          e.preventDefault()
+        }
+      }}
+    >
+      <div className="bg-gray-900 rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 border-2 border-gray-700 my-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white">Record Purchase</h2>
           <button

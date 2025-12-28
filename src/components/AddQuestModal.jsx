@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from '../store/useStore'
 import { X } from 'lucide-react'
 
@@ -22,6 +22,19 @@ export default function AddQuestModal({ onClose }) {
   const [title, setTitle] = useState('')
   const [trackingType, setTrackingType] = useState('unit')
   const [targetAmount, setTargetAmount] = useState('')
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    // Save the current overflow style
+    const originalStyle = window.getComputedStyle(document.body).overflow
+    // Disable scrolling on the body
+    document.body.style.overflow = 'hidden'
+    
+    // Re-enable scrolling when component unmounts
+    return () => {
+      document.body.style.overflow = originalStyle
+    }
+  }, [])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -47,8 +60,17 @@ export default function AddQuestModal({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg shadow-2xl max-w-md w-full p-6 border-2 border-gray-700">
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto" 
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onTouchMove={(e) => {
+        // Prevent scrolling the background when touching the backdrop
+        if (e.target === e.currentTarget) {
+          e.preventDefault()
+        }
+      }}
+    >
+      <div className="bg-gray-900 rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 border-2 border-gray-700 my-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-white">Add New Quest</h2>
           <button
@@ -179,13 +201,13 @@ export default function AddQuestModal({ onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-700 rounded-lg text-white hover:bg-gray-800 font-bold transition-all bg-gray-900/90"
+              className="flex-1 px-4 py-3 border border-gray-700 rounded-lg text-white hover:bg-gray-800 font-bold transition-all bg-gray-900/90 touch-manipulation"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold transition-all hover:scale-105"
+              className="flex-1 px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold transition-all active:scale-95 touch-manipulation"
             >
               Add Quest
             </button>
