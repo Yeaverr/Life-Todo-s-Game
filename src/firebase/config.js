@@ -15,24 +15,18 @@ const firebaseConfig = {
   appId: "1:96407020014:web:447966dfd23f96bc51eeff"
 };
 
-// Check if Firebase is configured
-const isFirebaseConfigured = firebaseConfig.apiKey !== "AIzaSyBj0FJjT95Eo8xBnq9Jd2_Rz0Sf11UoaZE"
-
-// Initialize Firebase only if configured
+// Initialize Firebase
 let app = null
 let db = null
 let auth = null
 
-if (isFirebaseConfigured) {
-  try {
-    app = initializeApp(firebaseConfig)
-    db = getFirestore(app)
-    auth = getAuth(app)
-  } catch (error) {
-    console.error('Firebase initialization error:', error)
-  }
-} else {
-  console.warn('Firebase not configured yet. App will use localStorage only.')
+try {
+  app = initializeApp(firebaseConfig)
+  db = getFirestore(app)
+  auth = getAuth(app)
+  console.log('✅ Firebase initialized successfully')
+} catch (error) {
+  console.error('❌ Firebase initialization error:', error)
 }
 
 export { db, auth }

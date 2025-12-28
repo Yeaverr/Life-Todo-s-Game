@@ -125,47 +125,47 @@ export default function StatsPanel() {
   }
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-white mb-6">Your Statistics</h2>
+    <div className="space-y-4 sm:space-y-6">
+      <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-6">Your Statistics</h2>
 
       {/* Quest Completion by Type */}
       <div>
-        <h3 className="text-xl font-bold text-white mb-4">
+        <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">
           Quests Completed by Type
         </h3>
-        <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg p-6 border-2 border-gray-700 shadow-lg">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg p-4 sm:p-6 border-2 border-gray-700 shadow-lg">
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
           <div className="text-center">
-            <div className="text-3xl font-bold text-blue-400">
+            <div className="text-2xl sm:text-3xl font-bold text-blue-400">
               {questsByType.daily}
             </div>
-            <div className="text-white/70 text-sm">Daily</div>
+            <div className="text-white/70 text-xs sm:text-sm">Daily</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-green-400">
+            <div className="text-2xl sm:text-3xl font-bold text-green-400">
               {questsByType.weekly}
             </div>
-            <div className="text-white/70 text-sm">Weekly</div>
+            <div className="text-white/70 text-xs sm:text-sm">Weekly</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-purple-400">
+            <div className="text-2xl sm:text-3xl font-bold text-purple-400">
               {questsByType.monthly}
             </div>
-            <div className="text-white/70 text-sm">Monthly</div>
+            <div className="text-white/70 text-xs sm:text-sm">Monthly</div>
           </div>
         </div>
         </div>
       </div>
 
       {/* Dashboard Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Monthly Completion Card */}
-        <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg p-6 border-2 border-gray-700 shadow-lg">
-          <div className="flex items-center gap-4">
-            <CalendarIcon className="w-10 h-10 text-blue-400" />
-            <div>
-              <p className="text-white/70 text-sm font-semibold">Monthly Completion</p>
-              <p className="text-3xl font-bold text-white">
+        <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg p-4 sm:p-6 border-2 border-gray-700 shadow-lg">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <CalendarIcon className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-white/70 text-xs sm:text-sm font-semibold">Monthly Completion</p>
+              <p className="text-2xl sm:text-3xl font-bold text-white">
                 {completedDaysThisMonth}/{daysInMonth}
               </p>
               <p className="text-white/60 text-xs mt-1">
@@ -176,12 +176,12 @@ export default function StatsPanel() {
         </div>
 
         {/* Expected Monthly Completion Card */}
-        <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg p-6 border-2 border-gray-700 shadow-lg">
-          <div className="flex items-center gap-4">
-            <Target className="w-10 h-10 text-purple-400" />
-            <div>
-              <p className="text-white/70 text-sm font-semibold">Expected Completion</p>
-              <p className="text-3xl font-bold text-white">
+        <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg p-4 sm:p-6 border-2 border-gray-700 shadow-lg">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <Target className="w-8 h-8 sm:w-10 sm:h-10 text-purple-400 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-white/70 text-xs sm:text-sm font-semibold">Expected Completion</p>
+              <p className="text-2xl sm:text-3xl font-bold text-white">
                 {now.getDate()}/{daysInMonth}
               </p>
               <p className="text-white/60 text-xs mt-1">
@@ -193,34 +193,34 @@ export default function StatsPanel() {
       </div>
 
       {/* Calendar */}
-      <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg p-6 border-2 border-gray-700 shadow-lg">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-white">Completion Calendar</h3>
-          <div className="flex items-center gap-4">
+      <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg p-3 sm:p-6 border-2 border-gray-700 shadow-lg">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+          <h3 className="text-lg sm:text-xl font-bold text-white">Completion Calendar</h3>
+          <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
             <button
               onClick={handlePrevMonth}
-              className="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-bold transition-all border border-gray-700"
+              className="px-2 sm:px-3 py-1 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-bold transition-all border border-gray-700 text-sm sm:text-base"
             >
               ←
             </button>
-            <span className="text-white font-bold text-lg min-w-[200px] text-center">
+            <span className="text-white font-bold text-sm sm:text-lg text-center flex-1 sm:flex-none sm:min-w-[150px] sm:min-w-[200px]">
               {monthNames[selectedMonth]} {selectedYear}
             </span>
             <button
               onClick={handleNextMonth}
-              className="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-bold transition-all border border-gray-700"
+              className="px-2 sm:px-3 py-1 bg-gray-800 hover:bg-gray-700 text-white rounded-lg font-bold transition-all border border-gray-700 text-sm sm:text-base"
             >
               →
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2">
           {/* Week day headers */}
           {weekDays.map((day) => (
             <div
               key={day}
-              className="text-center text-sm font-bold text-gray-400 py-2"
+              className="text-center text-xs sm:text-sm font-bold text-gray-400 py-1 sm:py-2"
             >
               {day}
             </div>
@@ -239,17 +239,17 @@ export default function StatsPanel() {
               }`}
             >
               {item.day !== null && (
-                <span className={item.isCompleted ? 'text-green-300' : 'text-gray-400'}>
+                <span className={`text-xs sm:text-sm ${item.isCompleted ? 'text-green-300' : 'text-gray-400'}`}>
                   {item.day}
                 </span>
               )}
             </div>
           ))}
         </div>
-        <div className="mt-4 flex items-center gap-4 justify-center">
+        <div className="mt-3 sm:mt-4 flex items-center gap-2 sm:gap-4 justify-center">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500/30 border-2 border-green-500 rounded"></div>
-            <span className="text-sm text-gray-400">All quests completed</span>
+            <div className="w-3 h-3 sm:w-4 sm:h-4 bg-green-500/30 border-2 border-green-500 rounded"></div>
+            <span className="text-xs sm:text-sm text-gray-400">All quests completed</span>
           </div>
         </div>
       </div>

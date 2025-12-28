@@ -21,7 +21,7 @@ const getUserId = () => {
 // Load data from Firestore
 export const loadFromFirebase = async () => {
   if (!db) {
-    // Firebase not configured, return null (will use localStorage)
+    console.warn('Firebase not configured. Using localStorage only.')
     return null
   }
   try {
@@ -32,31 +32,59 @@ export const loadFromFirebase = async () => {
     if (docSnap.exists()) {
       const data = docSnap.data()
       delete data.lastUpdated // Remove metadata
+      console.log('✅ Loaded data from Firebase')
       return data
     }
     return null
   } catch (error) {
-    console.error('Error loading from Firebase:', error)
+    console.error('❌ Error loading from Firebase:', error)
     return null
   }
+}
+
+// Helper function to filter out functions and only keep serializable data
+const filterSerializable = (obj) => {
+  if (obj === null || obj === undefined) return obj
+  if (typeof obj === 'function') return undefined // Skip functions
+  if (Array.isArray(obj)) {
+    return obj.map(item => filterSerializable(item))
+  }
+  if (typeof obj === 'object' && obj.constructor === Object) {
+    const filtered = {}
+    for (const key in obj) {
+      if (typeof obj[key] !== 'function') {
+        filtered[key] = filterSerializable(obj[key])
+      }
+    }
+    return filtered
+  }
+  return obj
 }
 
 // Save data to Firestore
 export const saveToFirebase = async (data) => {
   if (!db) {
-    // Firebase not configured, skip save (will use localStorage)
+    console.warn('Firebase not configured. Skipping save to Firebase.')
     return false
   }
   try {
     const userId = getUserId()
     const userDocRef = doc(db, 'users', userId)
+    
+    // Filter out functions - only save serializable data
+    const serializableData = filterSerializable(data)
+    
     await setDoc(userDocRef, {
-      ...data,
+      ...serializableData,
       lastUpdated: new Date().toISOString(),
     }, { merge: true })
+    // Only log on first save or if there are quests
+    if (serializableData.quests && Object.values(serializableData.quests).flat().length > 0) {
+      console.log('✅ Saved to Firebase')
+    }
     return true
   } catch (error) {
-    console.error('Error saving to Firebase:', error)
+    console.error('❌ Error saving to Firebase:', error)
     return false
   }
 }

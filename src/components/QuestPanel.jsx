@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from '../store/useStore'
 import { CheckCircle2, Circle, Calendar, Plus } from 'lucide-react'
 import TrackingInputModal from './TrackingInputModal'
@@ -9,10 +9,17 @@ const QUEST_TYPES = [
   { key: 'monthly', label: 'Monthly', color: 'bg-purple-500' },
 ]
 
-export default function QuestPanel() {
+export default function QuestPanel({ onTypeChange }) {
   const { quests, completeQuest, updateQuestProgress, lastDailyLevelUpDate } = useStore()
   const [selectedType, setSelectedType] = useState('daily')
   const [trackingModal, setTrackingModal] = useState({ isOpen: false, quest: null })
+
+  // Notify parent of type changes
+  useEffect(() => {
+    if (onTypeChange) {
+      onTypeChange(selectedType)
+    }
+  }, [selectedType, onTypeChange])
 
   const currentQuests = quests[selectedType] || []
   
@@ -66,57 +73,8 @@ export default function QuestPanel() {
     return amount
   }
 
-  const getDateDisplay = () => {
-    const now = new Date()
-    
-    switch (selectedType) {
-      case 'daily': {
-        const day = now.getDate()
-        const month = now.toLocaleDateString('en-US', { month: 'long' })
-        const weekday = now.toLocaleDateString('en-US', { weekday: 'long' })
-        const year = now.getFullYear()
-        return `${day} ${month}, ${weekday}, ${year}`
-      }
-      
-      case 'weekly': {
-        // Get Monday of current week
-        const day = now.getDay()
-        const diff = now.getDate() - day + (day === 0 ? -6 : 1) // Adjust when day is Sunday
-        const monday = new Date(now.getFullYear(), now.getMonth(), diff)
-        const sunday = new Date(monday)
-        sunday.setDate(monday.getDate() + 6)
-        
-        const formatDate = (date) => date.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric'
-        })
-        
-        return `${formatDate(monday)} - ${formatDate(sunday)}`
-      }
-      
-      case 'monthly':
-        return now.toLocaleDateString('en-US', {
-          month: 'long'
-        })
-      
-      default: {
-        const day = now.getDate()
-        const month = now.toLocaleDateString('en-US', { month: 'long' })
-        const weekday = now.toLocaleDateString('en-US', { weekday: 'long' })
-        const year = now.getFullYear()
-        return `${day} ${month}, ${weekday}, ${year}`
-      }
-    }
-  }
-
   return (
     <div className="space-y-6">
-      {/* Current Date */}
-      <div className="bg-gray-900/90 backdrop-blur-sm rounded-lg px-4 py-3 flex items-center gap-2 justify-center border-2 border-gray-700 w-[30%]">
-        <Calendar className="w-5 h-5 text-yellow-300" />
-        <span className="text-white font-bold text-base">{getDateDisplay()}</span>
-      </div>
-
       {/* Quest Type Tabs */}
       <div className="flex gap-2 flex-wrap">
         {QUEST_TYPES.map((type) => (
@@ -182,10 +140,7 @@ export default function QuestPanel() {
       {/* Quests List */}
       <div className="space-y-3">
         {currentQuests.length === 0 ? (
-          <div className="text-center py-12 bg-gray-900/90 rounded-lg backdrop-blur-sm border-2 border-gray-700">
-            <p className="text-white text-lg">
-              No {selectedType} quests yet. Add one to get started! 🚀
-            </p>
+          <div className="text-center py-8 bg-gray-900/90 rounded-lg backdrop-blur-sm border-2 border-gray-700">
           </div>
         ) : (
           currentQuests.map((quest) => (

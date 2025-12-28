@@ -76,7 +76,7 @@ export default function QuestManagementPanel() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Quest Type Tabs */}
       <div className="flex gap-2 flex-wrap">
         {QUEST_TYPES.map((qt) => (
@@ -86,7 +86,7 @@ export default function QuestManagementPanel() {
               setSelectedType(qt.key)
               setEditingQuest(null)
             }}
-            className={`px-4 py-2 rounded-lg font-bold transition-all border-2 ${
+            className={`px-3 sm:px-4 py-2 rounded-lg font-bold transition-all border-2 text-sm sm:text-base ${
               selectedType === qt.key
                 ? 'bg-gray-800 text-white shadow-lg scale-105 border-gray-600'
                 : 'bg-gray-900/90 text-white hover:bg-gray-800/90 border-gray-700'
@@ -99,9 +99,9 @@ export default function QuestManagementPanel() {
 
       {/* Quest List */}
       {currentQuests.length === 0 ? (
-        <div className="text-center py-12 bg-gray-900/90 rounded-lg border-2 border-gray-700">
-          <p className="text-gray-400 text-lg">No {selectedType} quests yet.</p>
-          <p className="text-gray-500 text-sm mt-2">
+        <div className="text-center py-8 sm:py-12 bg-gray-900/90 rounded-lg border-2 border-gray-700">
+          <p className="text-gray-400 text-base sm:text-lg">No {selectedType} quests yet.</p>
+          <p className="text-gray-500 text-xs sm:text-sm mt-2 px-4">
             Add quests from the Quests tab to manage them here.
           </p>
         </div>
@@ -110,7 +110,7 @@ export default function QuestManagementPanel() {
           {currentQuests.map((quest) => (
             <div
               key={quest.id}
-              className="bg-gray-900/90 rounded-lg p-4 border-2 border-gray-700"
+              className="bg-gray-900/90 rounded-lg p-3 sm:p-4 border-2 border-gray-700"
             >
               {editingQuest === quest.id ? (
                 <div className="space-y-4">
@@ -188,9 +188,9 @@ export default function QuestManagementPanel() {
               ) : (
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <h3 className="text-white font-bold text-lg">{quest.title}</h3>
+                    <h3 className="text-white font-bold text-base sm:text-lg">{quest.title}</h3>
                     <div className="flex items-center gap-4 mt-2">
-                      <span className="text-gray-300 text-sm">
+                      <span className="text-gray-300 text-xs sm:text-sm">
                         Target: {formatAmount(quest)}
                       </span>
                     </div>
@@ -198,17 +198,17 @@ export default function QuestManagementPanel() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(quest)}
-                      className="p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-all hover:scale-105 border border-gray-700"
+                      className="p-1.5 sm:p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-all hover:scale-105 border border-gray-700"
                       title="Edit quest"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(quest.id)}
-                      className="p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-all hover:scale-105 border border-gray-700"
+                      className="p-1.5 sm:p-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-all hover:scale-105 border border-gray-700"
                       title="Delete quest"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                 </div>
