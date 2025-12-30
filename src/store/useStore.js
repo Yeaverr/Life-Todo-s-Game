@@ -109,9 +109,10 @@ export const useStore = create(
             const lastLevelUp = lastDailyLevelUpDate
               ? new Date(lastDailyLevelUpDate).toDateString()
               : null
+            // Always update the completion timestamp to show exact completion time
+            lastDailyLevelUpDate = new Date().toISOString()
             if (lastLevelUp !== today) {
               newDailyLevel = state.dailyLevel + 1
-              lastDailyLevelUpDate = today
             }
           }
 
@@ -175,19 +176,38 @@ export const useStore = create(
       },
 
       updateQuest: (type, questId, updates) => {
-        set((state) => ({
-          quests: {
-            ...state.quests,
-            [type]: state.quests[type].map((q) =>
-              q.id === questId
-                ? {
-                    ...q,
-                    ...updates,
-                  }
-                : q
-            ),
-          },
-        }))
+        set((state) => {
+          const quest = state.quests[type].find((q) => q.id === questId)
+          if (!quest) return state
+
+          // Calculate the new values after updates
+          const newTargetAmount = updates.targetAmount !== undefined ? updates.targetAmount : quest.targetAmount
+          const newCurrentAmount = updates.currentAmount !== undefined ? updates.currentAmount : (quest.currentAmount || 0)
+          
+          // Prepare the updated quest
+          const updatedQuest = {
+            ...quest,
+            ...updates,
+          }
+
+          // If quest has a target amount, check if it should be marked as incomplete
+          if (newTargetAmount !== null && newTargetAmount !== undefined) {
+            // If current amount is less than target, mark as incomplete
+            if (newCurrentAmount < newTargetAmount) {
+              updatedQuest.completed = false
+              updatedQuest.completedAt = null
+            }
+          }
+
+          return {
+            quests: {
+              ...state.quests,
+              [type]: state.quests[type].map((q) =>
+                q.id === questId ? updatedQuest : q
+              ),
+            },
+          }
+        })
       },
 
       resetDailyQuests: () => {
@@ -341,9 +361,10 @@ export const useStore = create(
               const lastLevelUp = lastDailyLevelUpDate
                 ? new Date(lastDailyLevelUpDate).toDateString()
                 : null
+              // Always update the completion timestamp to show exact completion time
+              lastDailyLevelUpDate = new Date().toISOString()
               if (lastLevelUp !== today) {
                 newDailyLevel = state.dailyLevel + 1
-                lastDailyLevelUpDate = today
                 
                 // Track completed day (format: YYYY-MM-DD)
                 const todayStr = new Date().toISOString().split('T')[0]

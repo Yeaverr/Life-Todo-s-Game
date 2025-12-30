@@ -152,8 +152,9 @@ export default function QuestPanel({ onTypeChange }) {
                     : 'bg-gray-900/90 border-gray-700 hover:border-gray-600 hover:bg-gray-800/90'
                 }`}
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex flex-col gap-2">
+                  {/* First line: Checkbox - Name - Coin - Completed Time (if complete) - Actual/Target */}
+                  <div className="flex items-center gap-3">
                     <button
                       onClick={() => completeQuest(selectedType, quest.id)}
                       disabled={quest.completed}
@@ -169,45 +170,58 @@ export default function QuestPanel({ onTypeChange }) {
                         <Circle className="w-5 h-5" />
                       )}
                     </button>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <h3
-                          className={`font-semibold text-base ${
-                            quest.completed
-                              ? 'text-white'
-                              : 'text-white'
-                          }`}
-                        >
-                          {quest.title}
-                        </h3>
-                        <div className="flex items-center gap-3 text-sm">
-                          <span className="text-yellow-300 font-semibold">
-                            +{quest.reward.coins} 🪙
-                          </span>
-                          {quest.completedAt && (
-                            <div className="flex items-center gap-1 text-xs text-yellow-300">
-                              <Calendar className="w-4 h-4" />
-                              {new Date(quest.completedAt).toLocaleString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                hour12: false
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {quest.trackingType && quest.targetAmount !== null && (
-                    <div className="flex-shrink-0">
-                      <span className={`font-medium text-base ${
+                    <h3
+                      className={`font-semibold text-base truncate min-w-0 flex-1 max-w-[150px] sm:max-w-[250px] ${
                         quest.completed
                           ? 'text-white'
-                          : 'text-gray-300'
-                      }`}>
-                        {formatCurrentAmount(quest)}/{formatTargetAmount(quest)}
+                          : 'text-white'
+                      }`}
+                      title={quest.title}
+                    >
+                      {quest.title}
+                    </h3>
+                    <span className="text-yellow-300 font-semibold text-sm flex-shrink-0">
+                      +{quest.reward.coins} 🪙
+                    </span>
+                    {/* Completed Time - inline with other items */}
+                    {quest.completedAt && (
+                      <div className="flex items-center gap-1 text-xs text-yellow-300 flex-shrink-0">
+                        <Calendar className="w-4 h-4" />
+                        {new Date(quest.completedAt).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false
+                        })}
+                      </div>
+                    )}
+                    {/* Actual/Target */}
+                    {quest.trackingType && quest.targetAmount !== null && (
+                      <div className="flex-shrink-0 ml-auto">
+                        <span className={`font-medium text-base ${
+                          quest.completed
+                            ? 'text-white'
+                            : 'text-gray-300'
+                        }`}>
+                          {formatCurrentAmount(quest)}/{formatTargetAmount(quest)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {/* Progress Bar - full width, below everything */}
+                  {quest.trackingType && quest.targetAmount !== null && quest.targetAmount > 0 && (
+                    <div className="flex items-center gap-2 pl-8">
+                      <div className="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-300 bg-yellow-500"
+                          style={{
+                            width: `${Math.min(Math.round(((quest.currentAmount || 0) / quest.targetAmount) * 100), 100)}%`
+                          }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">
+                        {Math.min(Math.round(((quest.currentAmount || 0) / quest.targetAmount) * 100), 100)}%
                       </span>
                     </div>
                   )}

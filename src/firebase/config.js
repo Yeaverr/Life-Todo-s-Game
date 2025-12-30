@@ -2,17 +2,15 @@ import { initializeApp } from 'firebase/app'
 import { getFirestore } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 
-// Your web app's Firebase configuration
-// You'll need to replace these with your actual Firebase config values
-// Get these from Firebase Console > Project Settings > Your apps
-// Your web app's Firebase configuration
+// Firebase configuration from environment variables
+// For Vite, environment variables must be prefixed with VITE_
 const firebaseConfig = {
-  apiKey: "AIzaSyBj0FJjT95Eo8xBnq9Jd2_Rz0Sf11UoaZE",
-  authDomain: "reallifetodosgame.firebaseapp.com",
-  projectId: "reallifetodosgame",
-  storageBucket: "reallifetodosgame.firebasestorage.app",
-  messagingSenderId: "96407020014",
-  appId: "1:96407020014:web:447966dfd23f96bc51eeff"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase

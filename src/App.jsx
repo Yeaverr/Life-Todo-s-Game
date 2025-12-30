@@ -115,7 +115,7 @@ function App() {
                   onClick={() => setShowAddQuest(true)}
                   className="bg-gray-900/90 hover:bg-gray-800/90 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-bold shadow-lg transition-all hover:scale-105 border-2 border-gray-700 text-xs sm:text-sm whitespace-nowrap"
                 >
-                  + Add Quest
+                  Add Quest
                 </button>
               </div>
             </div>
