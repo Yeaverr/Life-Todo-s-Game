@@ -27,6 +27,10 @@ export const useStore = create(
       totalXP: 0,
       coins: 0,
       totalEarned: 0, // Total coins earned (for tracking)
+      totalQuestsCompleted: 0, // Total quests completed (all time)
+      totalDailyQuestsCompleted: 0, // Total daily quests completed (all time)
+      totalWeeklyQuestsCompleted: 0, // Total weekly quests completed (all time)
+      totalMonthlyQuestsCompleted: 0, // Total monthly quests completed (all time)
       lastDailyLevelUpDate: null, // Track when user last leveled up daily
       lastWeeklyLevelUpDate: null, // Track when user last leveled up weekly
       lastDailyResetDate: null, // Track when daily quests were last reset
@@ -105,6 +109,7 @@ export const useStore = create(
             })
 
           // Daily level up if all daily quests are completed and haven't leveled up today
+          let completedDays = [...state.completedDays]
           if (type === 'daily' && allDailyCompleted) {
             const lastLevelUp = lastDailyLevelUpDate
               ? new Date(lastDailyLevelUpDate).toDateString()
@@ -113,6 +118,12 @@ export const useStore = create(
             lastDailyLevelUpDate = new Date().toISOString()
             if (lastLevelUp !== today) {
               newDailyLevel = state.dailyLevel + 1
+              
+              // Track completed day (format: YYYY-MM-DD)
+              const todayStr = new Date().toISOString().split('T')[0]
+              if (!completedDays.includes(todayStr)) {
+                completedDays.push(todayStr)
+              }
             }
           }
 
@@ -147,6 +158,12 @@ export const useStore = create(
             }
           }
 
+          // Increment total quest completion counters
+          const newTotalQuestsCompleted = state.totalQuestsCompleted + 1
+          const newTotalDailyQuestsCompleted = type === 'daily' ? state.totalDailyQuestsCompleted + 1 : state.totalDailyQuestsCompleted
+          const newTotalWeeklyQuestsCompleted = type === 'weekly' ? state.totalWeeklyQuestsCompleted + 1 : state.totalWeeklyQuestsCompleted
+          const newTotalMonthlyQuestsCompleted = type === 'monthly' ? state.totalMonthlyQuestsCompleted + 1 : state.totalMonthlyQuestsCompleted
+
           return {
             quests: {
               ...state.quests,
@@ -156,6 +173,10 @@ export const useStore = create(
             totalXP: newTotalXP,
             coins: newCoins,
             totalEarned: newTotalEarned,
+            totalQuestsCompleted: newTotalQuestsCompleted,
+            totalDailyQuestsCompleted: newTotalDailyQuestsCompleted,
+            totalWeeklyQuestsCompleted: newTotalWeeklyQuestsCompleted,
+            totalMonthlyQuestsCompleted: newTotalMonthlyQuestsCompleted,
             dailyLevel: newDailyLevel,
             weeklyLevel: newWeeklyLevel,
             lastDailyLevelUpDate: lastDailyLevelUpDate,
@@ -220,25 +241,37 @@ export const useStore = create(
           const today = `${year}-${month}-${day}`
           
           let lastReset = null
-          if (state.lastDailyResetDate) {
+          let shouldReset = false
+          
+          if (!state.lastDailyResetDate) {
+            // No previous reset date, should reset
+            shouldReset = true
+          } else {
             try {
               // Try to parse the stored date (handles ISO strings, timestamps, or date strings)
               const lastResetDate = new Date(state.lastDailyResetDate)
-              if (!isNaN(lastResetDate.getTime())) {
-                // Use local time for comparison
+              if (isNaN(lastResetDate.getTime())) {
+                // Invalid date, should reset
+                shouldReset = true
+              } else {
+                // Use local time for comparison to avoid timezone issues
                 const resetYear = lastResetDate.getFullYear()
                 const resetMonth = String(lastResetDate.getMonth() + 1).padStart(2, '0')
                 const resetDay = String(lastResetDate.getDate()).padStart(2, '0')
                 lastReset = `${resetYear}-${resetMonth}-${resetDay}`
+                
+                // Compare dates - reset if it's a different day
+                shouldReset = lastReset !== today
               }
             } catch (e) {
               // If parsing fails, treat as new day (will reset)
-              lastReset = null
+              console.warn('Error parsing lastDailyResetDate:', e)
+              shouldReset = true
             }
           }
 
           // Only reset if it's a new day (or if lastReset is null/invalid)
-          if (lastReset !== today) {
+          if (shouldReset) {
             console.log('🔄 Resetting daily quests:', { lastReset, today, now: now.toLocaleString() })
             return {
               quests: {
@@ -260,17 +293,37 @@ export const useStore = create(
 
       resetWeeklyQuests: () => {
         set((state) => {
-          const thisWeek = getWeekNumber(new Date())
-          const thisYear = new Date().getFullYear()
-          const lastResetWeek = state.lastWeeklyResetDate
-            ? getWeekNumber(new Date(state.lastWeeklyResetDate))
-            : null
-          const lastResetYear = state.lastWeeklyResetDate
-            ? new Date(state.lastWeeklyResetDate).getFullYear()
-            : null
+          const now = new Date()
+          const thisWeek = getWeekNumber(now)
+          const thisYear = now.getFullYear()
+          
+          let shouldReset = false
+          
+          if (!state.lastWeeklyResetDate) {
+            // No previous reset date, should reset
+            shouldReset = true
+          } else {
+            try {
+              const lastResetDate = new Date(state.lastWeeklyResetDate)
+              if (isNaN(lastResetDate.getTime())) {
+                // Invalid date, should reset
+                shouldReset = true
+              } else {
+                const lastResetWeek = getWeekNumber(lastResetDate)
+                const lastResetYear = lastResetDate.getFullYear()
+                
+                // Only reset if it's a new week (or new year)
+                shouldReset = lastResetWeek !== thisWeek || lastResetYear !== thisYear
+              }
+            } catch (e) {
+              // If parsing fails, treat as new week (will reset)
+              console.warn('Error parsing lastWeeklyResetDate:', e)
+              shouldReset = true
+            }
+          }
 
-          // Only reset if it's a new week (or new year)
-          if (lastResetWeek !== thisWeek || lastResetYear !== thisYear) {
+          if (shouldReset) {
+            console.log('🔄 Resetting weekly quests:', { thisWeek, thisYear, now: now.toLocaleString() })
             return {
               quests: {
                 ...state.quests,
@@ -281,7 +334,7 @@ export const useStore = create(
                   completedAt: null,
                 })),
               },
-              lastWeeklyResetDate: new Date().toISOString(),
+              lastWeeklyResetDate: now.toISOString(),
             }
           }
           return state
@@ -293,14 +346,34 @@ export const useStore = create(
           const now = new Date()
           const thisMonth = now.getMonth()
           const thisYear = now.getFullYear()
-          const lastReset = state.lastMonthlyResetDate
-            ? new Date(state.lastMonthlyResetDate)
-            : null
-          const lastResetMonth = lastReset ? lastReset.getMonth() : null
-          const lastResetYear = lastReset ? lastReset.getFullYear() : null
+          
+          let shouldReset = false
+          
+          if (!state.lastMonthlyResetDate) {
+            // No previous reset date, should reset
+            shouldReset = true
+          } else {
+            try {
+              const lastReset = new Date(state.lastMonthlyResetDate)
+              if (isNaN(lastReset.getTime())) {
+                // Invalid date, should reset
+                shouldReset = true
+              } else {
+                const lastResetMonth = lastReset.getMonth()
+                const lastResetYear = lastReset.getFullYear()
+                
+                // Only reset if it's a new month (or new year)
+                shouldReset = lastResetMonth !== thisMonth || lastResetYear !== thisYear
+              }
+            } catch (e) {
+              // If parsing fails, treat as new month (will reset)
+              console.warn('Error parsing lastMonthlyResetDate:', e)
+              shouldReset = true
+            }
+          }
 
-          // Only reset if it's a new month (or new year)
-          if (lastResetMonth !== thisMonth || lastResetYear !== thisYear) {
+          if (shouldReset) {
+            console.log('🔄 Resetting monthly quests:', { thisMonth: thisMonth + 1, thisYear, now: now.toLocaleString() })
             return {
               quests: {
                 ...state.quests,
@@ -311,7 +384,7 @@ export const useStore = create(
                   completedAt: null,
                 })),
               },
-              lastMonthlyResetDate: new Date().toISOString(),
+              lastMonthlyResetDate: now.toISOString(),
             }
           }
           return state
@@ -402,6 +475,12 @@ export const useStore = create(
               }
             }
 
+            // Increment total quest completion counters
+            const newTotalQuestsCompleted = state.totalQuestsCompleted + 1
+            const newTotalDailyQuestsCompleted = type === 'daily' ? state.totalDailyQuestsCompleted + 1 : state.totalDailyQuestsCompleted
+            const newTotalWeeklyQuestsCompleted = type === 'weekly' ? state.totalWeeklyQuestsCompleted + 1 : state.totalWeeklyQuestsCompleted
+            const newTotalMonthlyQuestsCompleted = type === 'monthly' ? state.totalMonthlyQuestsCompleted + 1 : state.totalMonthlyQuestsCompleted
+
             return {
               quests: {
                 ...state.quests,
@@ -411,12 +490,16 @@ export const useStore = create(
               totalXP: newTotalXP,
               coins: newCoins,
               totalEarned: newTotalEarned,
-            dailyLevel: newDailyLevel,
-            weeklyLevel: newWeeklyLevel,
-            lastDailyLevelUpDate: lastDailyLevelUpDate,
-            lastWeeklyLevelUpDate: lastWeeklyLevelUpDate,
-            completedDays: completedDays,
-            completedWeeks: completedWeeks,
+              totalQuestsCompleted: newTotalQuestsCompleted,
+              totalDailyQuestsCompleted: newTotalDailyQuestsCompleted,
+              totalWeeklyQuestsCompleted: newTotalWeeklyQuestsCompleted,
+              totalMonthlyQuestsCompleted: newTotalMonthlyQuestsCompleted,
+              dailyLevel: newDailyLevel,
+              weeklyLevel: newWeeklyLevel,
+              lastDailyLevelUpDate: lastDailyLevelUpDate,
+              lastWeeklyLevelUpDate: lastWeeklyLevelUpDate,
+              completedDays: completedDays,
+              completedWeeks: completedWeeks,
             }
           }
 
@@ -485,6 +568,75 @@ export const useStore = create(
         set((state) => ({
           purchases: state.purchases.filter((p) => p.id !== purchaseId),
         }))
+      },
+
+      // Check if quests need to be refreshed (for 1:00 AM safety check)
+      checkQuestsNeedRefresh: () => {
+        const state = get()
+        const now = new Date()
+        
+        // Check daily quests
+        let dailyNeedsRefresh = false
+        if (!state.lastDailyResetDate) {
+          dailyNeedsRefresh = true
+        } else {
+          try {
+            const lastResetDate = new Date(state.lastDailyResetDate)
+            if (isNaN(lastResetDate.getTime())) {
+              dailyNeedsRefresh = true
+            } else {
+              const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+              const lastReset = `${lastResetDate.getFullYear()}-${String(lastResetDate.getMonth() + 1).padStart(2, '0')}-${String(lastResetDate.getDate()).padStart(2, '0')}`
+              dailyNeedsRefresh = lastReset !== today
+            }
+          } catch (e) {
+            dailyNeedsRefresh = true
+          }
+        }
+
+        // Check weekly quests
+        let weeklyNeedsRefresh = false
+        if (!state.lastWeeklyResetDate) {
+          weeklyNeedsRefresh = true
+        } else {
+          try {
+            const lastResetDate = new Date(state.lastWeeklyResetDate)
+            if (isNaN(lastResetDate.getTime())) {
+              weeklyNeedsRefresh = true
+            } else {
+              const thisWeek = getWeekNumber(now)
+              const thisYear = now.getFullYear()
+              const lastResetWeek = getWeekNumber(lastResetDate)
+              const lastResetYear = lastResetDate.getFullYear()
+              weeklyNeedsRefresh = lastResetWeek !== thisWeek || lastResetYear !== thisYear
+            }
+          } catch (e) {
+            weeklyNeedsRefresh = true
+          }
+        }
+
+        // Check monthly quests
+        let monthlyNeedsRefresh = false
+        if (!state.lastMonthlyResetDate) {
+          monthlyNeedsRefresh = true
+        } else {
+          try {
+            const lastResetDate = new Date(state.lastMonthlyResetDate)
+            if (isNaN(lastResetDate.getTime())) {
+              monthlyNeedsRefresh = true
+            } else {
+              const thisMonth = now.getMonth()
+              const thisYear = now.getFullYear()
+              const lastResetMonth = lastResetDate.getMonth()
+              const lastResetYear = lastResetDate.getFullYear()
+              monthlyNeedsRefresh = lastResetMonth !== thisMonth || lastResetYear !== thisYear
+            }
+          } catch (e) {
+            monthlyNeedsRefresh = true
+          }
+        }
+
+        return dailyNeedsRefresh || weeklyNeedsRefresh || monthlyNeedsRefresh
       },
     }),
     {

@@ -11,7 +11,7 @@ import AddPurchaseModal from './components/AddPurchaseModal'
 import DateDisplay from './components/DateDisplay'
 
 function App() {
-  const { resetDailyQuests, resetWeeklyQuests, resetMonthlyQuests } = useStore()
+  const { resetDailyQuests, resetWeeklyQuests, resetMonthlyQuests, checkQuestsNeedRefresh } = useStore()
   
   // Initialize Firebase sync
   useFirebaseSync()
@@ -52,6 +52,65 @@ function App() {
       clearTimeout(midnightTimeout)
     }
   }, [resetDailyQuests, resetWeeklyQuests, resetMonthlyQuests])
+
+  // 1:00 AM safety check to verify quests are refreshed
+  useEffect(() => {
+    const checkAndRefreshAt1AM = () => {
+      const now = new Date()
+      const currentHour = now.getHours()
+      const currentMinute = now.getMinutes()
+      
+      // Check if it's 1:00 AM (or 1:01 AM to allow some buffer)
+      if (currentHour === 1 && currentMinute <= 1) {
+        // Check if quests need refreshing
+        const needsRefresh = checkQuestsNeedRefresh()
+        
+        if (needsRefresh) {
+          console.log('⚠️ 1:00 AM Check: Quests need refresh, forcing reset and reloading page')
+          // Force reset all quests
+          resetDailyQuests()
+          resetWeeklyQuests()
+          resetMonthlyQuests()
+          
+          // Wait a moment for state to update, then reload
+          setTimeout(() => {
+            window.location.reload()
+          }, 1000)
+        } else {
+          console.log('✅ 1:00 AM Check: Quests are properly refreshed')
+        }
+      }
+    }
+
+    // Check immediately if it's around 1:00 AM
+    checkAndRefreshAt1AM()
+
+    // Set up interval to check every minute
+    const oneAMInterval = setInterval(checkAndRefreshAt1AM, 60000)
+
+    // Also set up a timeout for the next 1:00 AM
+    const now = new Date()
+    const next1AM = new Date(now)
+    next1AM.setHours(1, 0, 0, 0)
+    
+    // If it's already past 1:00 AM today, set for tomorrow
+    if (now.getHours() >= 1 && now.getMinutes() > 1) {
+      next1AM.setDate(next1AM.getDate() + 1)
+    }
+    
+    const msUntil1AM = next1AM.getTime() - now.getTime()
+
+    const oneAMTimeout = setTimeout(() => {
+      checkAndRefreshAt1AM()
+      // After first 1:00 AM check, check every minute
+      setInterval(checkAndRefreshAt1AM, 60000)
+    }, msUntil1AM)
+
+    return () => {
+      clearInterval(oneAMInterval)
+      clearTimeout(oneAMTimeout)
+    }
+  }, [checkQuestsNeedRefresh, resetDailyQuests, resetWeeklyQuests, resetMonthlyQuests])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 pb-8">

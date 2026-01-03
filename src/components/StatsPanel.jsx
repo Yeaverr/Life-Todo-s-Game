@@ -21,6 +21,10 @@ export default function StatsPanel() {
     quests,
     completedDays,
     completedWeeks,
+    totalQuestsCompleted,
+    totalDailyQuestsCompleted,
+    totalWeeklyQuestsCompleted,
+    totalMonthlyQuestsCompleted,
   } = useStore()
 
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
@@ -34,10 +38,11 @@ export default function StatsPanel() {
   const completionRate =
     totalQuests > 0 ? Math.round((completedQuests / totalQuests) * 100) : 0
 
+  // Use total all-time quest completions instead of current period
   const questsByType = {
-    daily: quests.daily.filter((q) => q.completed).length,
-    weekly: quests.weekly.filter((q) => q.completed).length,
-    monthly: quests.monthly.filter((q) => q.completed).length,
+    daily: totalDailyQuestsCompleted,
+    weekly: totalWeeklyQuestsCompleted,
+    monthly: totalMonthlyQuestsCompleted,
   }
 
   // Calculate monthly completion stats

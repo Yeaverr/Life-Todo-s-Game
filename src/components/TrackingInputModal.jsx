@@ -6,6 +6,7 @@ const TRACKING_UNITS = {
   steps: 'steps',
   milliliters: 'ml',
   calories: 'kcal',
+  pages: 'pages',
   // Legacy support
   walk: 'steps',
   drink: 'ml',
@@ -82,7 +83,7 @@ export default function TrackingInputModal({
             </p>
             <input
               type="text"
-              inputMode={trackingType === 'time' || trackingType === 'steps' ? 'numeric' : 'decimal'}
+              inputMode={trackingType === 'time' || trackingType === 'steps' || trackingType === 'pages' ? 'numeric' : 'decimal'}
               value={amount}
               onChange={(e) => {
                 const value = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')

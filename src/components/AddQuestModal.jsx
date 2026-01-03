@@ -14,6 +14,7 @@ const TRACKING_TYPES = [
   { key: 'time', label: 'Time', unit: 'minutes' },
   { key: 'calories', label: 'Calories', unit: 'kcal' },
   { key: 'milliliters', label: 'Milliliters', unit: 'ml' },
+  { key: 'pages', label: 'Pages', unit: 'pages' },
 ]
 
 export default function AddQuestModal({ onClose }) {
@@ -149,13 +150,13 @@ export default function AddQuestModal({ onClose }) {
               </label>
               <input
                 type="text"
-                inputMode={trackingType === 'time' || trackingType === 'steps' ? 'numeric' : 'decimal'}
+                inputMode={trackingType === 'time' || trackingType === 'steps' || trackingType === 'pages' ? 'numeric' : 'decimal'}
                 value={targetAmount}
                 onChange={(e) => {
                   const value = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')
                   setTargetAmount(value)
                 }}
-                placeholder={`e.g., ${trackingType === 'time' ? '30' : trackingType === 'steps' ? '10000' : trackingType === 'milliliters' ? '2000' : trackingType === 'calories' ? '2000' : '2000'}`}
+                placeholder={`e.g., ${trackingType === 'time' ? '30' : trackingType === 'steps' ? '10000' : trackingType === 'milliliters' ? '2000' : trackingType === 'calories' ? '2000' : trackingType === 'pages' ? '30' : '2000'}`}
                 className="w-full px-4 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-gray-800 text-white placeholder-gray-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 required={trackingType !== 'unit'}
               />

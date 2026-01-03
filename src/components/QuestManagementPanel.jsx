@@ -14,6 +14,7 @@ const TRACKING_TYPES = [
   { key: 'time', label: 'Time', unit: 'minutes' },
   { key: 'calories', label: 'Calories', unit: 'kcal' },
   { key: 'milliliters', label: 'Milliliters', unit: 'ml' },
+  { key: 'pages', label: 'Pages', unit: 'pages' },
 ]
 
 export default function QuestManagementPanel() {

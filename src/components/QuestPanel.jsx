@@ -35,7 +35,7 @@ export default function QuestPanel({ onTypeChange }) {
       // For unit type, just add 1
       updateQuestProgress(selectedType, quest.id, 1)
     } else {
-      // For other types (time, steps, milliliters, calories, and legacy types), open modal
+      // For other types (time, steps, milliliters, calories, pages, and legacy types), open modal
       setTrackingModal({ isOpen: true, quest })
     }
   }
@@ -47,14 +47,30 @@ export default function QuestPanel({ onTypeChange }) {
     setTrackingModal({ isOpen: false, quest: null })
   }
 
+  // Get unit abbreviation for tracking type
+  const getUnitAbbreviation = (type) => {
+    const unitMap = {
+      'unit': 'times',
+      'steps': 'steps',
+      'time': 'min',
+      'calories': 'kcal',
+      'milliliters': 'ml',
+      'drink': 'ml',
+      'pages': 'pages',
+      'walk': 'steps',
+      'eat': 'kcal',
+    }
+    return unitMap[type] || ''
+  }
+
   const formatCurrentAmount = (quest) => {
     const type = quest.trackingType
     const amount = quest.currentAmount || 0
     
     if ((type === 'milliliters' || type === 'drink') && amount >= 1000) {
-      return (amount / 1000).toFixed(1) + 'L'
+      return (amount / 1000).toFixed(1)
     }
-    if (type === 'steps' || type === 'walk' || type === 'calories' || type === 'eat') {
+    if (type === 'steps' || type === 'walk' || type === 'calories' || type === 'eat' || type === 'pages') {
       return amount.toLocaleString()
     }
     return amount
@@ -65,12 +81,32 @@ export default function QuestPanel({ onTypeChange }) {
     const amount = quest.targetAmount || 0
     
     if ((type === 'milliliters' || type === 'drink') && amount >= 1000) {
-      return (amount / 1000).toFixed(1) + 'L'
+      return (amount / 1000).toFixed(1)
     }
-    if (type === 'steps' || type === 'walk' || type === 'calories' || type === 'eat') {
+    if (type === 'steps' || type === 'walk' || type === 'calories' || type === 'eat' || type === 'pages') {
       return amount.toLocaleString()
     }
     return amount
+  }
+
+  // Format the display with unit abbreviation
+  const formatProgressDisplay = (quest) => {
+    const type = quest.trackingType
+    const currentAmount = quest.currentAmount || 0
+    const targetAmount = quest.targetAmount || 0
+    
+    // Special handling for milliliters - show L if >= 1000
+    if ((type === 'milliliters' || type === 'drink') && (currentAmount >= 1000 || targetAmount >= 1000)) {
+      const current = currentAmount >= 1000 ? (currentAmount / 1000).toFixed(1) : currentAmount
+      const target = targetAmount >= 1000 ? (targetAmount / 1000).toFixed(1) : targetAmount
+      const unit = currentAmount >= 1000 || targetAmount >= 1000 ? 'L' : 'ml'
+      return `${current}/${target} ${unit}`
+    }
+    
+    const current = formatCurrentAmount(quest)
+    const target = formatTargetAmount(quest)
+    const unit = getUnitAbbreviation(type)
+    return unit ? `${current}/${target} ${unit}` : `${current}/${target}`
   }
 
   return (
@@ -146,11 +182,13 @@ export default function QuestPanel({ onTypeChange }) {
           currentQuests.map((quest) => (
             <div key={quest.id} className="flex items-center gap-3">
               <div
-                className={`backdrop-blur-sm text-white rounded-lg py-2 px-4 shadow-md transition-all flex-1 border-2 ${
+                className={`backdrop-blur-sm text-white rounded-lg py-2 px-4 shadow-md transition-all flex-1 border-2 outline-none ${
                   quest.completed
                     ? 'bg-black/90 border-yellow-500'
-                    : 'bg-gray-900/90 border-gray-700 hover:border-gray-600 hover:bg-gray-800/90'
+                    : 'bg-gray-900/90 border-gray-700'
                 }`}
+                tabIndex={-1}
+                onMouseDown={(e) => e.preventDefault()}
               >
                 <div className="flex flex-col gap-2">
                   {/* First line: Checkbox - Name - Coin - Completed Time (if complete) - Actual/Target */}
@@ -158,7 +196,7 @@ export default function QuestPanel({ onTypeChange }) {
                     <button
                       onClick={() => completeQuest(selectedType, quest.id)}
                       disabled={quest.completed}
-                      className={`flex-shrink-0 transition-all ${
+                      className={`flex-shrink-0 transition-all outline-none focus:outline-none active:outline-none ${
                         quest.completed
                           ? 'text-yellow-500 cursor-not-allowed'
                           : 'text-gray-400 hover:text-green-500 hover:scale-110'
@@ -204,7 +242,7 @@ export default function QuestPanel({ onTypeChange }) {
                             ? 'text-white'
                             : 'text-gray-300'
                         }`}>
-                          {formatCurrentAmount(quest)}/{formatTargetAmount(quest)}
+                          {formatProgressDisplay(quest)}
                         </span>
                       </div>
                     )}
@@ -230,7 +268,7 @@ export default function QuestPanel({ onTypeChange }) {
               {!quest.completed && quest.trackingType && quest.targetAmount !== null && (
                 <button
                   onClick={() => handleAddProgress(quest)}
-                  className="bg-gray-900/90 hover:bg-gray-800/90 text-white p-2 rounded-lg transition-all hover:scale-110 flex-shrink-0 border-2 border-gray-700"
+                  className="bg-gray-900/90 hover:bg-gray-800/90 text-white p-2 rounded-lg transition-all hover:scale-110 flex-shrink-0 border-2 border-gray-700 outline-none focus:outline-none active:outline-none"
                   title="Add progress"
                 >
                   <Plus className="w-5 h-5" />
